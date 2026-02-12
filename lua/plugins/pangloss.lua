@@ -1,0 +1,5 @@
+return {
+  {
+    "pangloss/vim-javascript",
+  },
+}

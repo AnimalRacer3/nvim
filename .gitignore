@@ -1,0 +1,22 @@
+tt.*
+.tests
+doc/tags
+debug
+.repro
+foo.*
+*.log
+data
+
+# local state
+.lazy/
+mason/
+spell/
+shada/
+swap/
+backuo/
+undo/
+
+# OS/editor noise
+.DS_Store
+*.swp
+*.swo
