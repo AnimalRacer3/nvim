@@ -17,3 +17,6 @@ vim.keymap.set("n", "<leader>Sh", ":split<CR>", { desc = "Split horizontally" })
 
 -- toggling NvimTree
 vim.keymap.set("n", "<leader>e", ":NvimTreeToggle<CR>", { desc = "Toggle file explorer" })
+
+-- Save all
+vim.keymap.set("n", "<leader>w", "<cmd>wa<cr>", { desc = "Write all" })
