@@ -164,6 +164,58 @@ You are a Senior Developer's Quick Reference AI. Your role is to provide **conci
 Keep responses under 300 words unless complexity requires more.]]),
     },
   },
+  init = function()
+    -- Show a spinner notification (with the model and elapsed time) while a
+    -- request is running, since a large model can take a while to load.
+    local spinner = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" }
+    local timers = {}
+
+    local function notify(id, msg, level, opts)
+      local ok, snacks = pcall(require, "snacks")
+      if ok and snacks.notifier then
+        snacks.notifier.notify(msg, level, vim.tbl_extend("force", { id = "codecompanion_" .. id, title = "AI" }, opts))
+      end
+    end
+
+    vim.api.nvim_create_autocmd("User", {
+      pattern = { "CodeCompanionRequestStarted", "CodeCompanionRequestFinished" },
+      group = vim.api.nvim_create_augroup("CodeCompanionProgress", {}),
+      callback = function(args)
+        local data = args.data or {}
+        local id = tostring(data.id or 0)
+        local model = tostring(data.adapter and data.adapter.model or "AI")
+
+        if args.match == "CodeCompanionRequestStarted" then
+          local start, frame = vim.uv.now(), 0
+          local timer = assert(vim.uv.new_timer())
+          timers[id] = timer
+          timer:start(0, 120, vim.schedule_wrap(function()
+            if timers[id] ~= timer then
+              return
+            end
+            frame = frame % #spinner + 1
+            local secs = math.floor((vim.uv.now() - start) / 1000)
+            notify(id, ("%s %s is working... %ds"):format(spinner[frame], model, secs), "info", { timeout = false })
+          end))
+          return
+        end
+
+        local timer = timers[id]
+        timers[id] = nil
+        if timer then
+          timer:stop()
+          timer:close()
+        end
+        if data.status == "success" then
+          notify(id, ("✓ %s finished"):format(model), "info", { timeout = 2000 })
+        elseif data.status == "cancelled" then
+          notify(id, ("%s request cancelled"):format(model), "warn", { timeout = 2000 })
+        else
+          notify(id, ("%s request failed (details in ~/.local/state/nvim/codecompanion.log)"):format(model), "error", { timeout = 5000 })
+        end
+      end,
+    })
+  end,
   keys = {
     -- In visual mode the selection is sent along with the prompt.
     { "<leader>aa", ":CodeCompanion /architect<cr>", mode = { "n", "v" }, desc = "Ask Architect" },
