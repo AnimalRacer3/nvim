@@ -7,11 +7,16 @@ return {
 
   ---@type Ollama.Config
   opts = {
+    -- Self-hosted Ollama server. Override per machine with NVIM_AI_URL,
+    -- e.g. `export NVIM_AI_URL=http://127.0.0.1:11434` to use a local instance.
+    url = vim.env.NVIM_AI_URL or "https://ai.garykellstrom.dev",
     model = "phi3:mini",
     view = "float",
     conversation = true,
     -- Conversation-specific settings
     serve = {
+      -- The server is remote, so never try to start `ollama serve` locally.
+      on_start = false,
       command = "ollama",
       args = { "serve" },
       stop_command = "pkill",
